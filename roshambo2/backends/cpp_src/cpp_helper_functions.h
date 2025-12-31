@@ -157,7 +157,8 @@ void adagrad_step(std::array<DTYPE, 4> &q, std::array<DTYPE, 3> &t,
                   DTYPE lr_q, DTYPE lr_t);
 
 /// @brief Do the overlay for a single conformer of A against a single conformer
-/// of B
+/// of B.  The output in scores is the rotation and translation that moves B
+/// to optimise its score with A.
 /// @param molA - the query molecule as 1D array of 4 * NmolA entries. Each
 /// block of 4 is the coords and w parameter
 /// @param molAT - the working copy of A
@@ -169,7 +170,8 @@ void adagrad_step(std::array<DTYPE, 4> &q, std::array<DTYPE, 3> &t,
 /// @param self_overlap_A_color - color overlap of A with itself
 /// @param molB - the target molecule as 1D array of 4 * NmolB entries. Each
 /// block of 4 is the coords and w parameter
-/// @param molBT - the working copy of B
+/// @param molBT - the working copy of B - the final overlaid coordinates will
+/// be left here
 /// @param molB_type - the features types for molecule B
 /// @param NmolB - the number of atoms and features in B
 /// @param NmolB_real - the number of atoms in B
@@ -185,8 +187,20 @@ void adagrad_step(std::array<DTYPE, 4> &q, std::array<DTYPE, 3> &t,
 /// @param lr_q - scale factor for optimising the quaternion (?)
 /// @param lr_t - scale factor for optimising the translation (?)
 /// @param nsteps - number of optimiser steps
-/// @params scores - the output scores and transformation to reproduce the
-/// overlay - an array of size 20
+/// @return scores - the output scores and transformation to reproduce the
+/// overlay - an array of size 20. Only the first 16 are used here. They are:
+/// 0 - the combo score
+/// 1 - the shape tanimoto
+/// 2 - the color tanimoto
+/// 3 - the overlap volume
+/// 4 - the color overlap volume
+/// 5 - the volume of A
+/// 6 - the volume of B
+/// 7 - the color volume of A
+/// 8 - the color volume of B
+/// 9-12 - the quaternion to rotate B onto A. Applied first.
+/// 13-15 - the translation to move B onto A. Applied second.
+/// 16-19 - returned as zeros.
 void single_conformer_optimiser(
     const DTYPE *molA, DTYPE *molAT, const int *molA_type, int NmolA,
     int NmolA_real, int NmolA_color, DTYPE self_overlap_A,
