@@ -9,16 +9,21 @@ endif (BUILD_WITH_CUDA)
 # Find OpenMP package
 find_package(OpenMP REQUIRED)
 
-# Find CUDA
+# Find CUDA Toolkit (modern CMake approach)
 if (BUILD_WITH_CUDA)
-    find_package(CUDA REQUIRED)
+    find_package(CUDAToolkit REQUIRED)
 endif (BUILD_WITH_CUDA)
 
 # Find pybind
 find_package(pybind11)
 
 if (BUILD_WITH_CUDA)
-    include_directories("${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
+    # Use CUDAToolkit include dirs, fallback to CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES
+    if(CUDAToolkit_INCLUDE_DIRS)
+        include_directories("${CUDAToolkit_INCLUDE_DIRS}")
+    elseif(CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES)
+        include_directories("${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
+    endif()
     # change here for newer or older cards
     set(CMAKE_CUDA_ARCHITECTURES 60 70 80)
 endif (BUILD_WITH_CUDA)
